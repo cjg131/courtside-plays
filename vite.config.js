@@ -41,9 +41,11 @@ export default defineConfig({
     host: true,
   },
   build: {
-    // Default to out-of-Dropbox so repeated builds don't fight Dropbox file locks.
-    // Override with --outDir if you actually want dist/ under the repo.
-    outDir: process.env.CP_OUT_DIR || '/tmp/cp-build',
+    // Publish into ./dist by default — standard Vite output and what Netlify
+    // publishes per netlify.toml. Code lives at ~/cjwork/code (out of Dropbox),
+    // so the old "/tmp/cp-build" workaround for Dropbox file locks is no longer
+    // needed. Override with CP_OUT_DIR if you want the build to land elsewhere.
+    outDir: process.env.CP_OUT_DIR || 'dist',
     emptyOutDir: true,
     sourcemap: true,
   },
