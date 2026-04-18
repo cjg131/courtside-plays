@@ -5,7 +5,9 @@
 //  2. Track current frame index, playing/paused, speed multiplier.
 //  3. Advance frames automatically, respecting each frame's durationMs.
 //  4. Pause at branch points and expose the pendingBranch for the UI to render.
-//  5. Expose resolved actor positions + ball position for the current frame.
+//  5. Pause at the end of a WRONG quiz option's teaching clip so the UI can show
+//     "why that was wrong" feedback + a retry button.
+//  6. Expose resolved actor positions + ball position for the current frame.
 //
 // Everything here is pure state management. The Court / Actor / Ball components
 // do the actual rendering and Framer Motion handles the interpolation between
@@ -93,6 +95,44 @@ export function usePlayback(play, { autoplay = false, speed: initialSpeed = 1 } 
     return findNextUnresolvedBranch(play, selections, baseIdx);
   }, [play, selections, resolved, frameIdx, currentEntry]);
 
+  // Wrong-answer teaching moment: we are currently on the LAST frame of a
+  // selected quiz option whose isCorrect === false. The UI should pause and
+  // show the wrongReason + a retry button.
+  const wrongAttempt = useMemo(() => {
+    if (!currentEntry || currentEntry.origin.kind !== 'branch') return null;
+    const branch = (play?.branches || []).find(b => b.id === currentEntry.origin.branchId);
+    if (!branch?.isQuiz) return null;
+    const option = branch.options.find(o => o.id === currentEntry.origin.optionId);
+    if (!option || option.isCorrect) return null;
+    // Are we on the last frame of this option's branch frames?
+    const nextEntry = resolved[frameIdx + 1];
+    const isLast =
+      !nextEntry ||
+      nextEntry.origin.kind !== 'branch' ||
+      nextEntry.origin.branchId !== currentEntry.origin.branchId ||
+      nextEntry.origin.optionId !== currentEntry.origin.optionId;
+    if (!isLast) return null;
+    return { branch, option };
+  }, [currentEntry, resolved, frameIdx, play]);
+
+  // Correct-answer ack: last frame of a correct quiz option. Used only for a
+  // brief "nice, that's right" flash in the UI — playback continues normally.
+  const correctAttempt = useMemo(() => {
+    if (!currentEntry || currentEntry.origin.kind !== 'branch') return null;
+    const branch = (play?.branches || []).find(b => b.id === currentEntry.origin.branchId);
+    if (!branch?.isQuiz) return null;
+    const option = branch.options.find(o => o.id === currentEntry.origin.optionId);
+    if (!option || !option.isCorrect) return null;
+    const nextEntry = resolved[frameIdx + 1];
+    const isLast =
+      !nextEntry ||
+      nextEntry.origin.kind !== 'branch' ||
+      nextEntry.origin.branchId !== currentEntry.origin.branchId ||
+      nextEntry.origin.optionId !== currentEntry.origin.optionId;
+    if (!isLast) return null;
+    return { branch, option };
+  }, [currentEntry, resolved, frameIdx, play]);
+
   const atEnd = frameIdx >= resolved.length - 1 && !pendingBranch;
 
   // Auto-advance timer.
@@ -101,6 +141,11 @@ export function usePlayback(play, { autoplay = false, speed: initialSpeed = 1 } 
     if (timerRef.current) clearTimeout(timerRef.current);
     if (!playing) return;
     if (pendingBranch) return; // pause on branch
+    // Pause at the end of a wrong-answer teaching clip so we can show feedback.
+    if (wrongAttempt) {
+      setPlaying(false);
+      return;
+    }
     if (atEnd) {
       setPlaying(false);
       return;
@@ -114,7 +159,7 @@ export function usePlayback(play, { autoplay = false, speed: initialSpeed = 1 } 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [playing, frameIdx, resolved, speed, pendingBranch, atEnd]);
+  }, [playing, frameIdx, resolved, speed, pendingBranch, wrongAttempt, atEnd]);
 
   // Controls ------------------------------------------------------------------
   const play_ = useCallback(() => setPlaying(true), []);
@@ -156,6 +201,35 @@ export function usePlayback(play, { autoplay = false, speed: initialSpeed = 1 } 
     });
   }, []);
 
+  /**
+   * Retry a branch: clear its selection and rewind playback to the base frame
+   * where the branch was offered. Used when a kid picks the wrong answer and
+   * wants to try again after seeing the teaching clip.
+   */
+  const retryBranch = useCallback((branchId) => {
+    if (!play) return;
+    const branch = (play.branches || []).find(b => b.id === branchId);
+    if (!branch) return;
+    setSelections(prev => {
+      const next = new Map(prev);
+      next.delete(branchId);
+      return next;
+    });
+    setPlaying(false);
+    // After removing the selection, resolved will contain only the base frames
+    // up through branch.atFrameIdx (no spliced branch frames past that point,
+    // because this branch is unresolved). Seek to the base frame with
+    // origin.baseIdx === branch.atFrameIdx. Recompute lazily here since the
+    // state update from setSelections hasn't applied yet.
+    const nextSelections = new Map(selections);
+    nextSelections.delete(branchId);
+    const nextResolved = resolveFrames(play, nextSelections);
+    const target = nextResolved.findIndex(
+      e => e.origin.kind === 'base' && e.origin.baseIdx === branch.atFrameIdx
+    );
+    if (target >= 0) setFrameIdx(target);
+  }, [play, selections]);
+
   // Derive actor positions for the current frame, keyed by actorId.
   const positionsByActor = useMemo(() => {
     const map = new Map();
@@ -189,6 +263,8 @@ export function usePlayback(play, { autoplay = false, speed: initialSpeed = 1 } 
     playing,
     speed,
     pendingBranch,
+    wrongAttempt,
+    correctAttempt,
     atEnd,
     selections,
     // controls
@@ -201,5 +277,6 @@ export function usePlayback(play, { autoplay = false, speed: initialSpeed = 1 } 
     setSpeed,
     chooseBranchOption,
     unchooseLastBranch,
+    retryBranch,
   };
 }

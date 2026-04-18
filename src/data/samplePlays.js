@@ -2,6 +2,7 @@
 // Real CJ plays (press break, defense, press) get encoded in Task #19.
 
 import { createPlay, createActor, createFrame, createBranch, createBranchOption, createArrow, createAnnotation, PLAY_TYPES } from './schema.js';
+import { build122ZoneTrapQuiz } from './zone122Quiz.js';
 import { ACTOR_TYPES, ARROW_TYPES } from '../court/constants.js';
 
 /**
@@ -189,7 +190,7 @@ export function buildDemoFlowPlay() {
 
 /** Registry of preloaded dev plays. */
 export function getSamplePlays() {
-  return [buildDemoFlowPlay()];
+  return [buildDemoFlowPlay(), build122ZoneTrapQuiz()];
 }
 
 export function getSamplePlayById(id) {

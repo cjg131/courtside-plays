@@ -8,9 +8,14 @@
 //    drop straight into Firestore under teams/{tid}/plays/{playId}.
 // 4. Keep the shape flat enough that 1 MiB Firestore ceiling is never a problem
 //    for a realistic play (target: < 20 KB per play).
+//
+// v2 adds quiz mode on top of branches: isQuiz, role (which actor the kid is
+// playing), per-option isCorrect + wrongReason for teaching feedback.
 
 import { v4 as uuid } from 'uuid';
 import { ARROW_TYPES, ACTOR_TYPES } from '../court/constants.js';
+
+export const CURRENT_SCHEMA_VERSION = 2;
 
 export const PLAY_TYPES = {
   PRESS_BREAK: 'press_break',
@@ -49,7 +54,7 @@ export function createPlay({
 } = {}) {
   const now = Date.now();
   return {
-    schemaVersion: 1,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
     meta: {
       id: uuid(),
       name,
@@ -168,6 +173,14 @@ export function createAnnotation({
  * Each option has a label (what the defense did) and a list of `nextFrames`
  * which get played in order.
  *
+ * Quiz mode (v2): if `isQuiz` is true, the branch renders as a question
+ * and each option carries `isCorrect` + `wrongReason`. Wrong answers play
+ * the teaching clip (option.nextFrames), show the reason, then let the kid
+ * retry. Correct answers advance normally.
+ *
+ * `role` is optional: { actorId, description } tells the kid WHICH player
+ * they are for this decision. The viewer highlights that actor on the court.
+ *
  * Storing branch frames inline keeps the play self-contained. A future
  * version can add a `nextFrameIds` variant that references frames by id
  * if we need DAG reuse.
@@ -175,21 +188,32 @@ export function createAnnotation({
 export function createBranch({
   atFrameIdx = 0,
   prompt = 'What is the defense doing?',
-  options = [],   // [{ id, label, nextFrames: Frame[] }]
+  options = [],   // [{ id, label, nextFrames: Frame[], isCorrect, wrongReason }]
+  isQuiz = false,
+  role = null,    // optional { actorId, description }
 } = {}) {
   return {
     id: uuid(),
     atFrameIdx,
     prompt,
     options,
+    isQuiz,
+    role,
   };
 }
 
-export function createBranchOption({ label = '', nextFrames = [] } = {}) {
+export function createBranchOption({
+  label = '',
+  nextFrames = [],
+  isCorrect = false,
+  wrongReason = '',
+} = {}) {
   return {
     id: uuid(),
     label,
     nextFrames,
+    isCorrect,
+    wrongReason,
   };
 }
 
@@ -205,7 +229,7 @@ export function validatePlay(play) {
     errors.push('play is not an object');
     return { ok: false, errors };
   }
-  if (play.schemaVersion !== 1) {
+  if (play.schemaVersion !== 1 && play.schemaVersion !== 2) {
     errors.push(`unsupported schemaVersion: ${play.schemaVersion}`);
   }
   if (!play.meta?.id) errors.push('missing meta.id');
@@ -235,6 +259,15 @@ export function validatePlay(play) {
     if (!Array.isArray(b.options) || b.options.length < 2) {
       errors.push(`branches[${i}] needs at least 2 options`);
     }
+    if (b.isQuiz) {
+      if (b.role?.actorId && !actorIds.has(b.role.actorId)) {
+        errors.push(`branches[${i}].role references unknown actor ${b.role.actorId}`);
+      }
+      const correctCount = (b.options || []).filter(o => o.isCorrect).length;
+      if (correctCount < 1) {
+        errors.push(`branches[${i}] is a quiz but has no option marked isCorrect`);
+      }
+    }
   });
 
   return { ok: errors.length === 0, errors };
@@ -243,11 +276,26 @@ export function validatePlay(play) {
 // ---- Migrations ---------------------------------------------------------------
 
 /**
- * If we bump schemaVersion in the future, migrate old plays through here.
- * Currently no-op since we're on v1.
+ * Migrate old plays forward. v1 -> v2 adds quiz fields on branches + options.
+ * Safe to call on already-current plays (no-op).
  */
 export function migratePlay(play) {
   if (!play) return play;
-  if (!play.schemaVersion) return { ...play, schemaVersion: 1 };
+  if (!play.schemaVersion) {
+    play = { ...play, schemaVersion: 1 };
+  }
+  if (play.schemaVersion === 1) {
+    const branches = (play.branches || []).map(b => ({
+      ...b,
+      isQuiz: b.isQuiz ?? false,
+      role: b.role ?? null,
+      options: (b.options || []).map(o => ({
+        ...o,
+        isCorrect: o.isCorrect ?? false,
+        wrongReason: o.wrongReason ?? '',
+      })),
+    }));
+    play = { ...play, schemaVersion: 2, branches };
+  }
   return play;
 }

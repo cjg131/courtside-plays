@@ -11,6 +11,8 @@ import Arrow from '../court/Arrow.jsx';
 import { usePlayback } from './usePlayback.js';
 import Controls from './Controls.jsx';
 import BranchPrompt from './BranchPrompt.jsx';
+import QuizPrompt from './QuizPrompt.jsx';
+import WrongAnswerOverlay from './WrongAnswerOverlay.jsx';
 import Annotations, { getFloatingAnnotations } from './Annotations.jsx';
 
 export default function PlayStage({ play, header = null }) {
@@ -29,6 +31,20 @@ export default function PlayStage({ play, header = null }) {
     duration: Math.max(0.2, (pb.currentFrame?.durationMs ?? 1000) / 1000 / pb.speed),
     ease: 'easeInOut',
   };
+
+  // Which actor (if any) should be highlighted right now?
+  //  - While a quiz branch is pending, highlight the role actor for that branch.
+  //  - While a wrong-answer teaching clip is paused, keep highlighting the role
+  //    actor so the kid sees who they're playing.
+  const pendingQuizRoleActorId =
+    pb.pendingBranch?.branch?.isQuiz ? pb.pendingBranch.branch.role?.actorId : null;
+  const wrongQuizRoleActorId =
+    pb.wrongAttempt?.branch?.isQuiz ? pb.wrongAttempt.branch.role?.actorId : null;
+  const highlightActorId = pendingQuizRoleActorId || wrongQuizRoleActorId || null;
+
+  // Role actor object (for showing the jersey number in the prompt header).
+  const pendingRoleActor =
+    (pendingQuizRoleActorId && play.actors.find(a => a.id === pendingQuizRoleActorId)) || null;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-4">
@@ -59,6 +75,7 @@ export default function PlayStage({ play, header = null }) {
                   y={pos.y}
                   layoutId={`actor-${actor.id}`}
                   hasBall={pb.currentFrame?.ballHolder === actor.id}
+                  highlighted={actor.id === highlightActorId}
                   transition={transition}
                 />
               );
@@ -78,10 +95,29 @@ export default function PlayStage({ play, header = null }) {
           </Court>
         </div>
 
-        {pb.pendingBranch && (
-          <BranchPrompt
-            branch={pb.pendingBranch.branch}
-            onChoose={(optId) => pb.chooseBranchOption(pb.pendingBranch.branch.id, optId)}
+        {/* Branch prompt : quiz variant if branch.isQuiz, else generic read prompt. */}
+        {pb.pendingBranch && !pb.wrongAttempt && (
+          pb.pendingBranch.branch.isQuiz ? (
+            <QuizPrompt
+              branch={pb.pendingBranch.branch}
+              role={pb.pendingBranch.branch.role}
+              roleActor={pendingRoleActor}
+              onChoose={(optId) => pb.chooseBranchOption(pb.pendingBranch.branch.id, optId)}
+            />
+          ) : (
+            <BranchPrompt
+              branch={pb.pendingBranch.branch}
+              onChoose={(optId) => pb.chooseBranchOption(pb.pendingBranch.branch.id, optId)}
+            />
+          )
+        )}
+
+        {/* Wrong-answer overlay : kid sees what happened + retry button. */}
+        {pb.wrongAttempt && (
+          <WrongAnswerOverlay
+            branch={pb.wrongAttempt.branch}
+            option={pb.wrongAttempt.option}
+            onRetry={pb.retryBranch}
           />
         )}
       </div>

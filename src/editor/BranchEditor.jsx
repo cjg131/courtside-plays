@@ -9,7 +9,7 @@
 // matters most for "read the defense" reps.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, Plus, Trash2, Copy, Circle, Sparkles } from 'lucide-react';
+import { X, Plus, Trash2, Copy, Circle, Sparkles, Brain, Check, AlertTriangle } from 'lucide-react';
 import Court from '../court/Court.jsx';
 import Actor from '../court/Actor.jsx';
 import Ball from '../court/Ball.jsx';
@@ -81,6 +81,12 @@ export default function BranchEditor({ editor, branchId, onClose }) {
           </button>
         </div>
 
+        <QuizSettings
+          branch={branch}
+          actors={play.actors}
+          onPatch={(patch) => updateBranch(branch.id, patch)}
+        />
+
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-[260px_1fr_320px] overflow-hidden">
           {/* Options sidebar */}
           <aside className="border-r border-slate-800 overflow-y-auto p-3 space-y-2">
@@ -118,6 +124,12 @@ export default function BranchEditor({ editor, branchId, onClose }) {
                     </button>
                   </div>
                   <p className="text-[11px] text-slate-500 mt-1">{opt.nextFrames.length} frame{opt.nextFrames.length === 1 ? '' : 's'}</p>
+                  {branch.isQuiz && active && (
+                    <OptionQuizFields
+                      option={opt}
+                      onPatch={(patch) => updateBranchOption(branch.id, opt.id, patch)}
+                    />
+                  )}
                 </div>
               );
             })}
@@ -527,6 +539,110 @@ function LabeledNumber({ label, value, onChange, min, max, step }) {
         className="w-full bg-court-bg border border-slate-700 rounded px-2 py-1.5 text-slate-100 text-sm focus:outline-none focus:border-court-accent"
       />
     </label>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// QuizSettings : branch-level quiz toggle, role actor, role description.
+// Renders inline under the header so authors can flip a branch into a quiz
+// without digging into a submenu.
+
+function QuizSettings({ branch, actors, onPatch }) {
+  const isQuiz = !!branch.isQuiz;
+  const role = branch.role ?? null;
+
+  const toggleQuiz = (on) => {
+    if (on) {
+      onPatch({
+        isQuiz: true,
+        role: role ?? { actorId: null, description: '' },
+      });
+    } else {
+      onPatch({ isQuiz: false, role: null });
+    }
+  };
+
+  const setRole = (patch) => {
+    onPatch({ role: { actorId: role?.actorId ?? null, description: role?.description ?? '', ...patch } });
+  };
+
+  const selectableActors = actors.filter(a => a.kind === 'offense' || a.kind === 'defense' || a.kind === 'coach');
+
+  return (
+    <div className="border-b border-slate-800 px-3 py-2 flex flex-wrap items-center gap-3">
+      <label className="flex items-center gap-1.5 text-xs text-slate-200 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={isQuiz}
+          onChange={(e) => toggleQuiz(e.target.checked)}
+        />
+        <Brain size={13} className={isQuiz ? 'text-court-accent' : 'text-slate-500'} />
+        Quiz mode
+      </label>
+      {isQuiz && (
+        <>
+          <label className="flex items-center gap-1.5 text-xs text-slate-300">
+            <span className="text-slate-500">You are:</span>
+            <select
+              value={role?.actorId ?? ''}
+              onChange={(e) => setRole({ actorId: e.target.value || null })}
+              className="bg-court-bg border border-slate-700 rounded px-1.5 py-1 text-xs text-slate-100 focus:outline-none focus:border-court-accent"
+            >
+              <option value="">(no highlight)</option>
+              {selectableActors.map(a => (
+                <option key={a.id} value={a.id}>{a.label || a.kind}</option>
+              ))}
+            </select>
+          </label>
+          <input
+            type="text"
+            placeholder="Describe the role (e.g. top defender ball side)"
+            value={role?.description ?? ''}
+            onChange={(e) => setRole({ description: e.target.value })}
+            className="flex-1 min-w-[14rem] bg-court-bg border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:border-court-accent"
+          />
+        </>
+      )}
+      {isQuiz && (
+        <span className="text-[10px] text-slate-500">
+          Mark one option correct. Wrong options should include a "why" message.
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// OptionQuizFields : shown on the ACTIVE option card when the branch is a
+// quiz. Lets the author flag this option as the correct answer and write
+// the teaching message shown if a kid picks it wrong.
+
+function OptionQuizFields({ option, onPatch }) {
+  const correct = !!option.isCorrect;
+  return (
+    <div
+      className="mt-2 space-y-1.5 border-t border-slate-800 pt-2"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <label className={`flex items-center gap-1.5 text-[11px] cursor-pointer ${correct ? 'text-emerald-300' : 'text-slate-300'}`}>
+        <input
+          type="checkbox"
+          checked={correct}
+          onChange={(e) => onPatch({ isCorrect: e.target.checked })}
+        />
+        {correct ? <Check size={12} /> : <AlertTriangle size={12} />}
+        {correct ? 'Correct answer' : 'Wrong answer'}
+      </label>
+      {!correct && (
+        <textarea
+          value={option.wrongReason ?? ''}
+          onChange={(e) => onPatch({ wrongReason: e.target.value })}
+          placeholder="Why this is wrong (the kid sees this after the clip plays)"
+          rows={2}
+          className="w-full bg-court-bg border border-slate-700 rounded px-1.5 py-1 text-[11px] text-slate-100 focus:outline-none focus:border-court-accent resize-none"
+        />
+      )}
+    </div>
   );
 }
 
