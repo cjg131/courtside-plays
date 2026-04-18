@@ -1,0 +1,39 @@
+# Netlify build config for Courtside Plays.
+# Netlify auto-detects Vite from package.json, but making build and publish
+# explicit avoids guessing when we add future plugins (PWA, edge functions).
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  CI = "true"
+
+# Single-page app: every route falls through to index.html so React Router
+# handles /play/:id, /edit/:id, /share/:encoded on direct loads.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Security headers. Generous for now since there's no backend, no cookies,
+# and we want iframe embedding to work (coaches sharing in LMS later).
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Cache hashed Vite assets aggressively, don't cache the shell HTML.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
