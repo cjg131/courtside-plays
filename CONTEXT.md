@@ -60,6 +60,29 @@ src/
 - Video import (drop a practice clip as a layer behind the animation) : not in MVP.
 - Multi-team sharing outside CJ's own library : share URL is enough for MVP.
 
+## GitHub + Netlify
+
+- **Repo:** https://github.com/cjg131/courtside-plays (public, default branch `main`)
+- **Auth:** PAT in `About Me/START-HERE.md` (same one used for the other repos). Remote URL pattern: `https://<token>@github.com/cjg131/courtside-plays.git`.
+- **Netlify:** `netlify.toml` is already in the repo with SPA fallback + cache headers + Node 20. To wire deploys: https://app.netlify.com/start → "Import from Git" → pick `cjg131/courtside-plays`. Zero build config required.
+
+### First-time local wiring (CJ, one-time on your Mac)
+
+The sandbox session couldn't write to `.git` through Dropbox's sync lock, so the repo was pushed from a clean copy. To hook your Dropbox folder up to the remote:
+
+```bash
+cd "/Users/cj/Dropbox/CJ/Claude/CoWork/Apps/CourtsidePlays"
+rm -rf .git
+git init -b main
+# Replace <TOKEN> with the PAT from About Me/START-HERE.md
+git remote add origin https://<TOKEN>@github.com/cjg131/courtside-plays.git
+git fetch origin
+git reset origin/main
+git branch --set-upstream-to=origin/main main
+```
+
+After that `git status` shows a clean tree and `git pull` / `git push` work normally from your Mac.
+
 ## Last updated
 
-2026-04-18 : scaffold complete.
+2026-04-18 : scaffold complete, editor + viewer + share URL all live, GitHub repo up, Netlify config staged.
