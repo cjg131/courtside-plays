@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base app styling */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Reusable button styles */
+@layer components {
+  .btn {
+    @apply inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-court-accent text-slate-900 hover:bg-orange-400;
+  }
+  .btn-secondary {
+    @apply btn bg-court-panel text-slate-100 hover:bg-slate-700 border border-court-line;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-slate-300 hover:bg-court-panel;
+  }
+  .panel {
+    @apply bg-court-panel border border-court-line rounded-lg;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-slate-700 text-slate-200;
+  }
+}
+
+/* SVG interaction helpers */
+.court-svg {
+  touch-action: none; /* let pointer events work cleanly on mobile */
+  user-select: none;
+}
+
+.actor-handle {
+  cursor: grab;
+}
+.actor-handle:active {
+  cursor: grabbing;
+}
+
+/* Animated dashed stroke for pass arrows */
+@keyframes dash-march {
+  to { stroke-dashoffset: -12; }
+}
+.dash-march {
+  animation: dash-march 1s linear infinite;
+}
