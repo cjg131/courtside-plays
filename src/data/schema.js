@@ -108,6 +108,8 @@ export function createFrame({
   ballPosition = null,       // { x, y } when the ball is not tied to an actor
   arrows = [],
   annotations = [],
+  quizStop = false,          // v2.1: in quiz mode, playback pauses here until the kid drags defenders + submits
+  coachNote = '',            // v2.1: the rotation rule / reason, shown on the submit bar + wrong-answer overlay
 } = {}) {
   return {
     id: uuid(),
@@ -118,6 +120,8 @@ export function createFrame({
     ballPosition,
     arrows,
     annotations,
+    quizStop,
+    coachNote,
   };
 }
 

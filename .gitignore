@@ -37,3 +37,4 @@ dist-ssr/
 # Vite regenerated timestamp files (Dropbox-locked, ignore)
 vite.config.js.timestamp-*.mjs
 vite.config.ts.timestamp-*.mjs
+render-frame.mjs
