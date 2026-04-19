@@ -78,49 +78,52 @@ export function build122ZoneBasicsPlay() {
     [x5.id]: { x: 19, y: 44 },
   };
 
-  // WING_R : ball at right wing. X3 out to ball, X1 drops to strong-side
-  // high help, X2 slides over to top, X5 bumps to middle help, X4 holds
-  // block.
+  // WING_R : ball at right wing. X1 extends out to pressure the ball,
+  // X3 sinks down-and-over toward the 3pt line to deflect the skip to
+  // the corner, X2 drops to the free throw line in the middle, X4 holds
+  // strong-side block, X5 is weak-side middle help.
   const WING_R = {
-    [x1.id]: { x: 33, y: 19 },
-    [x2.id]: { x: 22, y: 22 },
-    [x3.id]: { x: 37, y: 22 },
+    [x1.id]: { x: 37, y: 22 },
+    [x2.id]: { x: 25, y: 28 },
+    [x3.id]: { x: 41, y: 30 },
     [x4.id]: { x: 31, y: 44 },
     [x5.id]: { x: 24, y: 38 },
   };
 
-  // CORNER_R : ball at right corner. X4 on ball, X3 slides down to trap,
-  // X5 crosses to strong block, X1 drops HARD into strong-side elbow next
-  // to X2, X2 bumps to middle help. X1 paint-adjacent kills the skip AND
-  // high-post.
+  // CORNER_R : ball at right corner. X4 on ball, X3 topside of the trap
+  // hugging the 3pt line to kill the skip back to the wing, X5 crosses
+  // to the strong-side block, X1 drops into the strong-side elbow inside
+  // the paint, X2 bumps to middle help.
   const CORNER_R = {
     [x1.id]: { x: 29, y: 28 },
     [x2.id]: { x: 24, y: 30 },
-    [x3.id]: { x: 42, y: 36 },
+    [x3.id]: { x: 43, y: 38 },
     [x4.id]: { x: 44, y: 42 },
     [x5.id]: { x: 31, y: 44 },
   };
 
-  // WING_L : mirror of WING_R around x=25. X2 out to ball on the LEFT wing,
-  // X1 drops to left-side high help, X3 slides to top, X4 bumps to middle,
-  // X5 holds the left block.
+  // WING_L : mirror of WING_R. X1 extends out to pressure the ball on
+  // the LEFT wing, X2 sinks down-and-over toward the 3pt line to deflect
+  // the skip to the left corner, X3 drops to the free throw line in the
+  // middle, X5 holds the strong-side block, X4 is weak-side middle help.
   const WING_L = {
-    [x1.id]: { x: 17, y: 19 },
-    [x2.id]: { x: 13, y: 22 },
-    [x3.id]: { x: 28, y: 22 },
+    [x1.id]: { x: 13, y: 22 },
+    [x2.id]: { x:  9, y: 30 },
+    [x3.id]: { x: 25, y: 28 },
     [x4.id]: { x: 26, y: 38 },
     [x5.id]: { x: 19, y: 44 },
   };
 
-  // CORNER_L : mirror of CORNER_R. X2 on ball in LEFT corner, X5 slides to
-  // trap, X4 crosses to left block, X1 into LEFT strong-side elbow next to
-  // X3, X3 bumps to middle help.
+  // CORNER_L : mirror of CORNER_R. X2 on ball in LEFT corner, X5 topside
+  // of the trap hugging the 3pt line to kill the skip back to the wing,
+  // X4 crosses to the left block, X1 drops into the LEFT strong-side
+  // elbow inside the paint, X3 bumps to middle help.
   const CORNER_L = {
     [x1.id]: { x: 21, y: 28 },
     [x2.id]: { x:  6, y: 42 },
     [x3.id]: { x: 26, y: 30 },
     [x4.id]: { x: 19, y: 44 },
-    [x5.id]: { x:  8, y: 36 },
+    [x5.id]: { x:  7, y: 38 },
   };
 
   // Halfway slide between two snapshots : averages each defender's position.
@@ -225,10 +228,11 @@ export function build122ZoneBasicsPlay() {
     fromDef: SHELL, toDef: WING_R,
     quiz: {
       coachNote:
-        'Same-side elbow goes. X3 sprints to the ball on the wing. X1 drops ' +
-        'to strong-side high help. X2 slides across to cover the top. X5 ' +
-        'bumps to middle help in front of the rim. X4 stays on the ' +
-        'strong-side block.',
+        'X1 extends out to pressure the ball on the wing. X3 sinks down ' +
+        'and over toward the 3pt line to deflect the skip pass to the ' +
+        'corner. X2 drops to the free throw line in the middle. X4 holds ' +
+        'the strong-side block. X5 is weak-side middle help in front of ' +
+        'the rim.',
     },
   }));
 
@@ -240,10 +244,10 @@ export function build122ZoneBasicsPlay() {
     fromDef: WING_R, toDef: CORNER_R,
     quiz: {
       coachNote:
-        'Same-side block goes. X4 sprints to the ball in the corner. X3 ' +
-        'slides down to trap. X5 crosses the lane to cover the block X4 ' +
-        'just left. X1 DROPS hard into the paint at the strong-side elbow, ' +
-        'right next to X2 : this kills the skip AND the high-post flash. ' +
+        'X4 sprints to the ball in the corner. X3 is topside of the trap, ' +
+        'hugging the 3pt line to kill the skip back to the wing. X5 ' +
+        'crosses the lane to cover the strong-side block. X1 drops to the ' +
+        'strong-side elbow inside the paint, killing the high-post flash. ' +
         'X2 bumps to middle help in front of the rim.',
     },
   }));
@@ -272,10 +276,11 @@ export function build122ZoneBasicsPlay() {
     fromDef: SHELL, toDef: WING_L,
     quiz: {
       coachNote:
-        'Mirror of the right side. X2 sprints to the ball on the LEFT wing. ' +
-        'X1 drops to strong-side high help on the LEFT. X3 slides across ' +
-        'to cover the top. X4 bumps to middle help. X5 stays on the left ' +
-        'block.',
+        'Mirror of the right side. X1 extends out to pressure the ball on ' +
+        'the LEFT wing. X2 sinks down and over toward the 3pt line to ' +
+        'deflect the skip to the left corner. X3 drops to the free throw ' +
+        'line in the middle. X5 holds the strong-side block. X4 is ' +
+        'weak-side middle help.',
     },
   }));
 
@@ -287,10 +292,11 @@ export function build122ZoneBasicsPlay() {
     fromDef: WING_L, toDef: CORNER_L,
     quiz: {
       coachNote:
-        'Mirror of the right corner. X5 sprints to the ball in the LEFT ' +
-        'corner. X2 slides down to trap. X4 crosses to the left block. X1 ' +
-        'drops hard to the LEFT strong-side elbow, right next to X3 : this ' +
-        'kills the skip AND the high-post. X3 bumps to middle help.',
+        'Mirror of the right corner. X2 sprints to the ball in the LEFT ' +
+        'corner. X5 is topside of the trap, hugging the 3pt line to kill ' +
+        'the skip back to the wing. X4 crosses the lane to the left ' +
+        'block. X1 drops to the LEFT strong-side elbow inside the paint. ' +
+        'X3 bumps to middle help.',
     },
   }));
 
