@@ -14,16 +14,19 @@ export const COURT = {
   // lane / paint
   laneWidth: 12,     // NBA width, wider than HS but reads cleaner
   laneLength: 19,
-  // three-point line
-  threePtRadius: 22,
-  threePtCorner: 14, // straight-line portion from baseline
-  threePtCornerY: 14,
+  // three-point line (modern NBA style)
+  //   - arc is a circle of radius 23.75 centered on the rim
+  //   - corner straight lines are 22 ft from the center of the court
+  //   - the straight line meets the arc where x = ±22 from center,
+  //     at y distance sqrt(23.75^2 - 22^2) ≈ 8.95 from the rim
+  threePtArcRadius: 23.75,
+  threePtCornerX: 22,
   // rim
   rimRadius: 0.75,
   rimOffsetFromBaseline: 5.25,
   // free throw circle
   freeThrowRadius: 6,
-  // centerjump circle (full court only)
+  // centerjump circle
   centerRadius: 6,
   // restricted arc
   restrictedRadius: 4,
