@@ -110,6 +110,40 @@ export default function PlayStage({ play, header = null }) {
     return true;
   });
 
+  // Teach/Quiz toggle. Rendered as its own row so it shows even when a caller
+  // (PlayViewer, SharedViewer, etc.) supplies a custom `header` prop. This used
+  // to live inside the default-header fallback, which meant it was silently
+  // discarded whenever a custom header was passed : the exact bug CJ hit where
+  // the toggle never appeared on the live site.
+  const modeToggle = hasQuiz ? (
+    <div className="mb-3 flex justify-end">
+      <div className="inline-flex rounded-md overflow-hidden ring-1 ring-slate-700">
+        <button
+          onClick={() => switchMode(MODES.TEACH)}
+          className={
+            mode === MODES.TEACH
+              ? 'px-3 py-1.5 text-xs font-semibold bg-court-accent text-slate-900 flex items-center gap-1.5'
+              : 'px-3 py-1.5 text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-1.5'
+          }
+          title="Watch the full animated playthrough"
+        >
+          <BookOpen size={13} /> Teach
+        </button>
+        <button
+          onClick={() => switchMode(MODES.QUIZ)}
+          className={
+            mode === MODES.QUIZ
+              ? 'px-3 py-1.5 text-xs font-semibold bg-court-accent text-slate-900 flex items-center gap-1.5'
+              : 'px-3 py-1.5 text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-1.5'
+          }
+          title="Drag the defenders into position at each read"
+        >
+          <Brain size={13} /> Quiz
+        </button>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-4">
       {header ?? (
@@ -118,34 +152,9 @@ export default function PlayStage({ play, header = null }) {
             <p className="text-xs text-slate-400">{play.meta.type}</p>
             <h1 className="text-lg font-semibold text-slate-100">{play.meta.name}</h1>
           </div>
-          {hasQuiz && (
-            <div className="inline-flex rounded-md overflow-hidden ring-1 ring-slate-700">
-              <button
-                onClick={() => switchMode(MODES.TEACH)}
-                className={
-                  mode === MODES.TEACH
-                    ? 'px-3 py-1.5 text-xs font-semibold bg-court-accent text-slate-900 flex items-center gap-1.5'
-                    : 'px-3 py-1.5 text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-1.5'
-                }
-                title="Watch the full animated playthrough"
-              >
-                <BookOpen size={13} /> Teach
-              </button>
-              <button
-                onClick={() => switchMode(MODES.QUIZ)}
-                className={
-                  mode === MODES.QUIZ
-                    ? 'px-3 py-1.5 text-xs font-semibold bg-court-accent text-slate-900 flex items-center gap-1.5'
-                    : 'px-3 py-1.5 text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-1.5'
-                }
-                title="Drag the defenders into position at each read"
-              >
-                <Brain size={13} /> Quiz
-              </button>
-            </div>
-          )}
         </div>
       )}
+      {modeToggle}
 
       <div className="panel p-3 relative">
         <div className="w-full max-h-[72vh] aspect-[50/47] flex items-center justify-center">
