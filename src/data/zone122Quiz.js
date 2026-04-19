@@ -1,16 +1,22 @@
 // 1-2-2 Zone Defense : Basics.
 //
-// CJ's foundational defense teaching. Kids play X1-X5. Linear storyline :
-//   shell -> swing to wing -> wing rotation [QUIZ]
-//         -> swing to corner -> corner rotation [QUIZ]
-//         -> skip back -> wing recovery
-//         -> reversal to top -> top recovery [QUIZ]
-//         -> back to shell.
+// Full rotation teaching drill. Ball swings top -> right wing -> right corner,
+// skip back to wing, reversal to top, then MIRRORS to the left side: top ->
+// left wing -> left corner, skip back, reversal. Ends on the shell.
 //
-// Every pass is broken into release + in-flight + arrival, and every
-// rotation shows an intermediate step plus a final resting picture. Ball
-// movement on non-quiz frames is autoplayed; quizStop frames pause for the
-// kid to drag all five defenders into the right spot.
+// Each pass is structured as THREE frames so the animation reads naturally:
+//   1. Release   ball at the passer      defense at the pre-pass snapshot
+//   2. In-flight ball at the midpoint    defense at the HALFWAY slide
+//   3. Arrival   ball at the receiver    defense at the ROTATED snapshot
+// The defenders are already moving while the ball is in the air, and they
+// are ALREADY in position by the time the receiver catches it. That is how a
+// real zone plays : no teleporting after the catch.
+//
+// QUIZ STOPS happen on the arrival frame of each new rotation (wing right,
+// corner right, wing left, corner left). In quiz mode, playback autoplays
+// until the first quiz stop, then pauses. The kid drags all five defenders
+// into the right spots and submits. Correct advances; wrong shows the coach
+// note.
 //
 // Coordinate system (confirmed against Court.jsx):
 //   - Half court, 50 wide x 47 deep. Vertical. Baseline BOTTOM (y=47),
@@ -30,9 +36,9 @@ export function build122ZoneBasicsPlay() {
     name: '1-2-2 Zone Defense : Basics',
     type: PLAY_TYPES.DEFENSE,
     description:
-      'Watch Teach mode to see the full rotation. Flip to Quiz mode: the ball ' +
-      'moves on its own, and at each read you drag all five defenders into the ' +
-      'right spots and submit. Three reads: wing, corner, and recovery.',
+      'Watch Teach mode to see the full rotation across both sides of the floor. ' +
+      'Flip to Quiz mode: the ball moves on its own, and at each wing and corner ' +
+      'you drag all five defenders into the right spots and submit. Four reads total.',
     tags: ['defense', 'zone', '1-2-2', 'basics', 'quiz', 'cyo'],
     view: COURT_VIEWS.HALF,
     orientation: COURT_ORIENTATIONS.VERTICAL,
@@ -51,17 +57,19 @@ export function build122ZoneBasicsPlay() {
   const x5 = createActor({ kind: ACTOR_TYPES.DEFENSE, label: 'X5' });
   play.actors = [o1, o2, o3, o4, o5, x1, x2, x3, x4, x5];
 
-  // ---- Offensive positions (stay put) -------------------------------------
+  // ---- Offensive positions (fixed for the whole drill) -------------------
+  // O1 top, O2 right wing, O3 left wing, O4 right corner, O5 left corner.
   const OFF = {
     [o1.id]: { x: 25, y: 12 },
     [o2.id]: { x: 40, y: 22 },
     [o3.id]: { x: 10, y: 22 },
     [o4.id]: { x: 47, y: 43 },
-    [o5.id]: { x: 3,  y: 43 },
+    [o5.id]: { x:  3, y: 43 },
   };
 
-  // ---- Defensive rotation snapshots --------------------------------------
-  // Shell : starting 1-2-2 alignment.
+  // ---- Defensive snapshots : 1-2-2 alignment and rotations --------------
+  // SHELL. X1 above arc, X2 LEFT elbow, X3 RIGHT elbow, X4 RIGHT block,
+  // X5 LEFT block.
   const SHELL = {
     [x1.id]: { x: 25, y: 17 },
     [x2.id]: { x: 19, y: 28 },
@@ -70,72 +78,64 @@ export function build122ZoneBasicsPlay() {
     [x5.id]: { x: 19, y: 44 },
   };
 
-  // Wing rotation, ball at right wing (O2). Same-side elbow (X3) goes,
-  // top (X1) drops to complete the double, weak elbow (X2) slides over,
-  // weak block (X5) bumps up to middle help, strong block (X4) holds.
-  const WING = {
-    [x1.id]: { x: 33, y: 19 },   // dropped to strong-side high help
-    [x2.id]: { x: 22, y: 22 },   // slid over to cover the top
-    [x3.id]: { x: 37, y: 22 },   // out to the ball, wing-level
-    [x4.id]: { x: 31, y: 44 },   // holds the strong block
-    [x5.id]: { x: 24, y: 38 },   // middle help, front of the rim
-  };
-
-  // Wing halfway : defenders mid-slide. Intermediate teach frame.
-  const WING_HALF = {
-    [x1.id]: { x: 29, y: 18 },
-    [x2.id]: { x: 21, y: 25 },
-    [x3.id]: { x: 34, y: 25 },
+  // WING_R : ball at right wing. X3 out to ball, X1 drops to strong-side
+  // high help, X2 slides over to top, X5 bumps to middle help, X4 holds
+  // block.
+  const WING_R = {
+    [x1.id]: { x: 33, y: 19 },
+    [x2.id]: { x: 22, y: 22 },
+    [x3.id]: { x: 37, y: 22 },
     [x4.id]: { x: 31, y: 44 },
-    [x5.id]: { x: 21, y: 41 },
+    [x5.id]: { x: 24, y: 38 },
   };
 
-  // Corner rotation, ball at right corner (O4). Strong-side block (X4)
-  // goes to ball. Strong-side wing (X3) slides down with the ball to trap.
-  // Weak block (X5) crosses the lane to cover the block X4 left. Top (X1)
-  // drops HARD into the paint/strong-side elbow next to X2 : this is CJ's
-  // correction. X2 bumps to middle help.
-  const CORNER = {
-    [x1.id]: { x: 29, y: 28 },   // strong-side elbow, paint-adjacent, next to X2
-    [x2.id]: { x: 24, y: 30 },   // middle help, front of the rim
-    [x3.id]: { x: 42, y: 36 },   // trap with X4 in the corner
-    [x4.id]: { x: 44, y: 42 },   // on ball in the corner
-    [x5.id]: { x: 31, y: 44 },   // crossed to the strong block
+  // CORNER_R : ball at right corner. X4 on ball, X3 slides down to trap,
+  // X5 crosses to strong block, X1 drops HARD into strong-side elbow next
+  // to X2, X2 bumps to middle help. X1 paint-adjacent kills the skip AND
+  // high-post.
+  const CORNER_R = {
+    [x1.id]: { x: 29, y: 28 },
+    [x2.id]: { x: 24, y: 30 },
+    [x3.id]: { x: 42, y: 36 },
+    [x4.id]: { x: 44, y: 42 },
+    [x5.id]: { x: 31, y: 44 },
   };
 
-  // Corner halfway : defenders mid-rotation.
-  const CORNER_HALF = {
-    [x1.id]: { x: 31, y: 23 },
-    [x2.id]: { x: 23, y: 26 },
-    [x3.id]: { x: 40, y: 29 },
-    [x4.id]: { x: 38, y: 43 },
-    [x5.id]: { x: 27, y: 41 },
+  // WING_L : mirror of WING_R around x=25. X2 out to ball on the LEFT wing,
+  // X1 drops to left-side high help, X3 slides to top, X4 bumps to middle,
+  // X5 holds the left block.
+  const WING_L = {
+    [x1.id]: { x: 17, y: 19 },
+    [x2.id]: { x: 13, y: 22 },
+    [x3.id]: { x: 28, y: 22 },
+    [x4.id]: { x: 26, y: 38 },
+    [x5.id]: { x: 19, y: 44 },
   };
 
-  // Wing recovery : ball skipped from corner back to O2. Defense has to
-  // undo the corner trap and re-establish wing coverage.
-  const WING_RECOVER_HALF = {
-    [x1.id]: { x: 31, y: 22 },
-    [x2.id]: { x: 24, y: 27 },
-    [x3.id]: { x: 39, y: 28 },
-    [x4.id]: { x: 37, y: 43 },
-    [x5.id]: { x: 27, y: 42 },
+  // CORNER_L : mirror of CORNER_R. X2 on ball in LEFT corner, X5 slides to
+  // trap, X4 crosses to left block, X1 into LEFT strong-side elbow next to
+  // X3, X3 bumps to middle help.
+  const CORNER_L = {
+    [x1.id]: { x: 21, y: 28 },
+    [x2.id]: { x:  6, y: 42 },
+    [x3.id]: { x: 26, y: 30 },
+    [x4.id]: { x: 19, y: 44 },
+    [x5.id]: { x:  8, y: 36 },
   };
 
-  // Top recovery : ball reversed from O2 back to O1 at the top. Weak-side
-  // defender bumps the ball until X1 recovers home.
-  const RECOVER_HALF = {
-    [x1.id]: { x: 29, y: 19 },
-    [x2.id]: { x: 25, y: 22 },
-    [x3.id]: { x: 33, y: 25 },
-    [x4.id]: { x: 33, y: 44 },
-    [x5.id]: { x: 23, y: 43 },
-  };
+  // Halfway slide between two snapshots : averages each defender's position.
+  // Used on every in-flight frame so the defense is clearly MOVING while
+  // the ball is in the air.
+  function halfway(from, to) {
+    const m = {};
+    for (const id of Object.keys(from)) {
+      const a = from[id], b = to[id];
+      m[id] = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    }
+    return m;
+  }
 
-  const RECOVER = SHELL; // shell is the recovery target
-
-  // ---- Helpers ------------------------------------------------------------
-  // Build a positions array from a defense snapshot; offense is fixed.
+  // ---- Helpers -----------------------------------------------------------
   function pos(defense) {
     return [
       ...Object.entries(OFF).map(([id, p]) => ({ actorId: id, x: p.x, y: p.y })),
@@ -155,25 +155,56 @@ export function build122ZoneBasicsPlay() {
     coachNote: opts.coachNote ?? '',
   });
 
-  // Ball-in-flight frame builder. Ball sits at a midpoint, no holder.
-  const flight = (label, defense, from, to, t = 0.5, opts = {}) =>
-    mk(label, pos(defense), null, {
-      ...opts,
-      ballPosition: {
-        x: from.x + (to.x - from.x) * t,
-        y: from.y + (to.y - from.y) * t,
-      },
-      durationMs: opts.durationMs ?? 350,
-    });
-
-  // Offensive positions shortcuts.
+  // Shortcuts.
   const P_O1 = OFF[o1.id];
   const P_O2 = OFF[o2.id];
+  const P_O3 = OFF[o3.id];
   const P_O4 = OFF[o4.id];
+  const P_O5 = OFF[o5.id];
+
+  // Build a full 3-frame pass segment: release, in-flight-with-defense-moving,
+  // arrival. Defense is at `fromDef` on release, halfway on flight, `toDef`
+  // on arrival. `quiz` marks the arrival as a quiz stop with a coach note.
+  function pass({ label, fromActor, toActor, fromPt, toPt, fromDef, toDef, quiz = null }) {
+    const mid = { x: (fromPt.x + toPt.x) / 2, y: (fromPt.y + toPt.y) / 2 };
+    return [
+      mk(
+        `${label} : release`,
+        pos(fromDef),
+        fromActor.id,
+        {
+          durationMs: 500,
+          arrows: [createArrow({
+            type: ARROW_TYPES.PASS, actorId: fromActor.id,
+            points: [fromPt, toPt],
+          })],
+        },
+      ),
+      mk(
+        `${label} : ball in flight`,
+        pos(halfway(fromDef, toDef)),
+        null,
+        {
+          durationMs: 450,
+          ballPosition: mid,
+        },
+      ),
+      mk(
+        quiz ? `${label} : QUIZ` : `${label} : arrival`,
+        pos(toDef),
+        toActor.id,
+        {
+          durationMs: quiz ? 1600 : 900,
+          quizStop: !!quiz,
+          coachNote: quiz?.coachNote ?? '',
+        },
+      ),
+    ];
+  }
 
   const frames = [];
 
-  // ---- Frame 1 : Shell ---------------------------------------------------
+  // ---- 1. Shell opening --------------------------------------------------
   frames.push(mk(
     '1-2-2 shell alignment',
     pos(SHELL),
@@ -186,245 +217,100 @@ export function build122ZoneBasicsPlay() {
     },
   ));
 
-  // ---- Frames 2-4 : O1 -> O2 (swing to wing) -----------------------------
-  frames.push(mk(
-    'O1 passes to the right wing',
-    pos(SHELL),
-    o1.id,
-    {
-      durationMs: 600,
-      arrows: [createArrow({
-        type: ARROW_TYPES.PASS, actorId: o1.id,
-        points: [P_O1, P_O2],
-      })],
-    },
-  ));
-  frames.push(flight('Ball in flight to O2', SHELL, P_O1, P_O2, 0.55));
-  frames.push(mk(
-    'O2 catches on the wing',
-    pos(SHELL),
-    o2.id,
-    {
-      durationMs: 800,
-      annotations: [createAnnotation({
-        text: 'Ball is on the wing. Defense still in shell. Who closes?',
-      })],
-    },
-  ));
-
-  // ---- Frames 5-6 : Wing rotation (intermediate + final QUIZ) ------------
-  frames.push(mk(
-    'Wing rotation (sliding)',
-    pos(WING_HALF),
-    o2.id,
-    {
-      durationMs: 700,
-      arrows: [
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x3.id,
-          points: [SHELL[x3.id], WING[x3.id]] }),
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x1.id,
-          points: [SHELL[x1.id], WING[x1.id]] }),
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x2.id,
-          points: [SHELL[x2.id], WING[x2.id]] }),
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x5.id,
-          points: [SHELL[x5.id], WING[x5.id]] }),
-      ],
-    },
-  ));
-  frames.push(mk(
-    'Wing rotation : X3 + X1 double',
-    pos(WING),
-    o2.id,
-    {
-      durationMs: 1600,
-      quizStop: true,
+  // ---- 2. Top -> Right Wing (QUIZ) ---------------------------------------
+  frames.push(...pass({
+    label: 'O1 swings to right wing',
+    fromActor: o1, toActor: o2,
+    fromPt: P_O1, toPt: P_O2,
+    fromDef: SHELL, toDef: WING_R,
+    quiz: {
       coachNote:
-        'Same-side elbow goes. X3 sprints to the ball. X1 drops down to double. ' +
-        'X2 slides across to cover the top. X5 bumps to middle help. X4 stays on the block.',
+        'Same-side elbow goes. X3 sprints to the ball on the wing. X1 drops ' +
+        'to strong-side high help. X2 slides across to cover the top. X5 ' +
+        'bumps to middle help in front of the rim. X4 stays on the ' +
+        'strong-side block.',
     },
-  ));
+  }));
 
-  // ---- Frames 7-9 : O2 -> O4 (swing to corner) ---------------------------
-  frames.push(mk(
-    'O2 passes to the corner',
-    pos(WING),
-    o2.id,
-    {
-      durationMs: 600,
-      arrows: [createArrow({
-        type: ARROW_TYPES.PASS, actorId: o2.id,
-        points: [P_O2, P_O4],
-      })],
-    },
-  ));
-  frames.push(flight('Ball in flight to O4', WING, P_O2, P_O4, 0.55));
-  frames.push(mk(
-    'O4 catches in the corner',
-    pos(WING),
-    o4.id,
-    {
-      durationMs: 800,
-      annotations: [createAnnotation({
-        text: 'Ball in the corner. Defense still in wing shape. Who traps?',
-      })],
-    },
-  ));
-
-  // ---- Frames 10-11 : Corner rotation (intermediate + final QUIZ) --------
-  frames.push(mk(
-    'Corner rotation (sliding)',
-    pos(CORNER_HALF),
-    o4.id,
-    {
-      durationMs: 700,
-      arrows: [
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x4.id,
-          points: [WING[x4.id], CORNER[x4.id]] }),
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x3.id,
-          points: [WING[x3.id], CORNER[x3.id]] }),
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x5.id,
-          points: [WING[x5.id], CORNER[x5.id]] }),
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x1.id,
-          points: [WING[x1.id], CORNER[x1.id]] }),
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x2.id,
-          points: [WING[x2.id], CORNER[x2.id]] }),
-      ],
-    },
-  ));
-  frames.push(mk(
-    'Corner rotation : X4 + X3 trap',
-    pos(CORNER),
-    o4.id,
-    {
-      durationMs: 1600,
-      quizStop: true,
+  // ---- 3. Right Wing -> Right Corner (QUIZ) ------------------------------
+  frames.push(...pass({
+    label: 'O2 feeds the right corner',
+    fromActor: o2, toActor: o4,
+    fromPt: P_O2, toPt: P_O4,
+    fromDef: WING_R, toDef: CORNER_R,
+    quiz: {
       coachNote:
-        'Same-side block goes. X4 sprints to the ball. X3 slides down to trap. ' +
-        'X5 crosses the lane to cover the block X4 left. X1 DROPS into the paint ' +
-        'at the strong-side elbow, right next to X2. X2 bumps to middle help. ' +
-        'X1 near X2 takes away the skip to the wing AND the high-post flash.',
+        'Same-side block goes. X4 sprints to the ball in the corner. X3 ' +
+        'slides down to trap. X5 crosses the lane to cover the block X4 ' +
+        'just left. X1 DROPS hard into the paint at the strong-side elbow, ' +
+        'right next to X2 : this kills the skip AND the high-post flash. ' +
+        'X2 bumps to middle help in front of the rim.',
     },
-  ));
+  }));
 
-  // ---- Frames 12-14 : O4 -> O2 (skip back) -------------------------------
-  frames.push(mk(
-    'O4 skips back to the wing',
-    pos(CORNER),
-    o4.id,
-    {
-      durationMs: 600,
-      arrows: [createArrow({
-        type: ARROW_TYPES.PASS, actorId: o4.id,
-        points: [P_O4, P_O2],
-      })],
-    },
-  ));
-  frames.push(flight('Skip pass in flight', CORNER, P_O4, P_O2, 0.5));
-  frames.push(mk(
-    'O2 catches on the wing again',
-    pos(CORNER),
-    o2.id,
-    {
-      durationMs: 800,
-      annotations: [createAnnotation({
-        text: 'Skip back to the wing. Defense is in the corner shape and has to recover.',
-      })],
-    },
-  ));
+  // ---- 4. Right Corner -> Right Wing (skip back, recovery) ---------------
+  frames.push(...pass({
+    label: 'O4 skips back to the wing',
+    fromActor: o4, toActor: o2,
+    fromPt: P_O4, toPt: P_O2,
+    fromDef: CORNER_R, toDef: WING_R,
+  }));
 
-  // ---- Frames 15-16 : Wing recovery --------------------------------------
-  frames.push(mk(
-    'Wing recovery (sliding)',
-    pos(WING_RECOVER_HALF),
-    o2.id,
-    {
-      durationMs: 700,
-      arrows: [
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x1.id,
-          points: [CORNER[x1.id], WING[x1.id]] }),
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x3.id,
-          points: [CORNER[x3.id], WING[x3.id]] }),
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x4.id,
-          points: [CORNER[x4.id], WING[x4.id]] }),
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x5.id,
-          points: [CORNER[x5.id], WING[x5.id]] }),
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x2.id,
-          points: [CORNER[x2.id], WING[x2.id]] }),
-      ],
-    },
-  ));
-  frames.push(mk(
-    'Wing recovered : back in wing rotation',
-    pos(WING),
-    o2.id,
-    {
-      durationMs: 1200,
-      annotations: [createAnnotation({
-        text: 'Back in wing rotation. Defense survives the skip.',
-      })],
-    },
-  ));
+  // ---- 5. Right Wing -> Top (reversal) -----------------------------------
+  frames.push(...pass({
+    label: 'O2 reverses to the top',
+    fromActor: o2, toActor: o1,
+    fromPt: P_O2, toPt: P_O1,
+    fromDef: WING_R, toDef: SHELL,
+  }));
 
-  // ---- Frames 17-19 : O2 -> O1 (reversal to top) -------------------------
-  frames.push(mk(
-    'O2 reverses to the top',
-    pos(WING),
-    o2.id,
-    {
-      durationMs: 600,
-      arrows: [createArrow({
-        type: ARROW_TYPES.PASS, actorId: o2.id,
-        points: [P_O2, P_O1],
-      })],
-    },
-  ));
-  frames.push(flight('Ball in flight to O1', WING, P_O2, P_O1, 0.55));
-  frames.push(mk(
-    'O1 catches at the top',
-    pos(WING),
-    o1.id,
-    {
-      durationMs: 800,
-      annotations: [createAnnotation({
-        text: 'Reversal. Weak-side defender has to bump until X1 recovers.',
-      })],
-    },
-  ));
-
-  // ---- Frames 20-21 : Top recovery (intermediate + final QUIZ) ----------
-  frames.push(mk(
-    'Top recovery (sliding)',
-    pos(RECOVER_HALF),
-    o1.id,
-    {
-      durationMs: 700,
-      arrows: [
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x2.id,
-          points: [WING[x2.id], RECOVER[x2.id]] }),
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x1.id,
-          points: [WING[x1.id], RECOVER[x1.id]] }),
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x3.id,
-          points: [WING[x3.id], RECOVER[x3.id]] }),
-        createArrow({ type: ARROW_TYPES.CUT, actorId: x5.id,
-          points: [WING[x5.id], RECOVER[x5.id]] }),
-      ],
-    },
-  ));
-  frames.push(mk(
-    'Back to shell',
-    pos(RECOVER),
-    o1.id,
-    {
-      durationMs: 1600,
-      quizStop: true,
+  // ---- 6. Top -> Left Wing (QUIZ) ---------------------------------------
+  frames.push(...pass({
+    label: 'O1 swings to left wing',
+    fromActor: o1, toActor: o3,
+    fromPt: P_O1, toPt: P_O3,
+    fromDef: SHELL, toDef: WING_L,
+    quiz: {
       coachNote:
-        'On a reversal, the nearest weak-side defender bumps the ball until X1 recovers. ' +
-        'X1 sprints back to the top. X2, X3 slide back to their elbows. X5 slides back to ' +
-        'the weak block. Shape returns. Never leave the top-of-key shooter alone.',
+        'Mirror of the right side. X2 sprints to the ball on the LEFT wing. ' +
+        'X1 drops to strong-side high help on the LEFT. X3 slides across ' +
+        'to cover the top. X4 bumps to middle help. X5 stays on the left ' +
+        'block.',
     },
-  ));
+  }));
 
-  // ---- Frame 22 : Shell reset --------------------------------------------
+  // ---- 7. Left Wing -> Left Corner (QUIZ) --------------------------------
+  frames.push(...pass({
+    label: 'O3 feeds the left corner',
+    fromActor: o3, toActor: o5,
+    fromPt: P_O3, toPt: P_O5,
+    fromDef: WING_L, toDef: CORNER_L,
+    quiz: {
+      coachNote:
+        'Mirror of the right corner. X5 sprints to the ball in the LEFT ' +
+        'corner. X2 slides down to trap. X4 crosses to the left block. X1 ' +
+        'drops hard to the LEFT strong-side elbow, right next to X3 : this ' +
+        'kills the skip AND the high-post. X3 bumps to middle help.',
+    },
+  }));
+
+  // ---- 8. Left Corner -> Left Wing (skip back, recovery) -----------------
+  frames.push(...pass({
+    label: 'O5 skips back to the wing',
+    fromActor: o5, toActor: o3,
+    fromPt: P_O5, toPt: P_O3,
+    fromDef: CORNER_L, toDef: WING_L,
+  }));
+
+  // ---- 9. Left Wing -> Top (reversal) ------------------------------------
+  frames.push(...pass({
+    label: 'O3 reverses to the top',
+    fromActor: o3, toActor: o1,
+    fromPt: P_O3, toPt: P_O1,
+    fromDef: WING_L, toDef: SHELL,
+  }));
+
+  // ---- 10. Shell reset ---------------------------------------------------
   frames.push(mk(
     'Shell : ready for the next possession',
     pos(SHELL),

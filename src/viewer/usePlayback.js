@@ -248,10 +248,21 @@ export function usePlayback(play, {
   }, [currentFrame]);
 
   // Also expose the PREVIOUS frame's positions : the quiz drag UI starts
-  // defenders here so the kid drags from the last-known state.
+  // defenders here so the kid drags from the last-known state. We skip any
+  // ball-in-flight frames (no ballHolder, ball floating mid-pass) when
+  // seeding, because in quiz mode the kid should drag FROM the pre-rotation
+  // snapshot, not from the halfway-rotated intermediate.
   const prevPositionsByActor = useMemo(() => {
     const map = new Map();
-    const prev = resolved[frameIdx - 1]?.frame;
+    let i = frameIdx - 1;
+    while (i >= 0) {
+      const f = resolved[i]?.frame;
+      if (!f) break;
+      const isFlight = !f.ballHolder && !!f.ballPosition;
+      if (!isFlight) break;
+      i -= 1;
+    }
+    const prev = resolved[i]?.frame;
     if (!prev) return map;
     for (const p of prev.positions || []) {
       map.set(p.actorId, { x: p.x, y: p.y });
