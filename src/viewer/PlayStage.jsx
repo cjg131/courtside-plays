@@ -88,10 +88,17 @@ export default function PlayStage({ play, header = null }) {
   };
 
   // Reset everything when the user toggles modes.
+  // Quiz mode autoplays so the ball swings on its own until it hits a
+  // quizStop frame, at which point the drag UI appears. Without this, the
+  // kid would flip to Quiz mode and see nothing happen (the playback
+  // is paused at the shell, which isn't a quiz stop).
   const switchMode = (next) => {
     if (next === mode) return;
     setMode(next);
     pb.restart();
+    if (next === MODES.QUIZ) {
+      setTimeout(() => pb.play(), 0);
+    }
   };
 
   // Which actors do we render via the normal playback layer?

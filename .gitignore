@@ -38,3 +38,4 @@ dist-ssr/
 vite.config.js.timestamp-*.mjs
 vite.config.ts.timestamp-*.mjs
 render-frame.mjs
+render-all-frames.mjs
