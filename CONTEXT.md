@@ -80,3 +80,23 @@ End: `git add -A && git commit -m "..." && git push`
 ## Last updated
 
 2026-04-18 : scaffold complete, editor + viewer + share URL all live, GitHub repo up, Netlify config staged. Canonical checkout moved to `~/cjwork/code/courtside-plays/` (out of Dropbox).
+
+## Quiz mode (shipped 2026-04-18)
+
+- Schema v2 adds `isQuiz`, `role: { actorId, description }` on branches and `isCorrect` + `wrongReason` on options.
+- `migratePlay` forward-ports v1 plays (fills quiz fields with defaults).
+- `usePlayback` pauses at unresolved branches, splices wrong-answer teaching clips inline, then lets the kid retry.
+- `QuizPrompt` + `WrongAnswerFeedback` render the question, highlight the "you are" actor on court, and show the specific reason after a miss.
+- Editor (`BranchEditor`) has the full quiz authoring UI.
+
+## Sample play: 1-2-2 Zone Defense : Basics (id `122-zone-basics`)
+
+- File: `src/data/zone122Quiz.js`, export `build122ZoneBasicsPlay()`.
+- Five basics-first reads: top pressure (X1), same-side short-corner pop (X5), weak-side sink (X2), corner double (X3+X4), soft post double (X2).
+- Labeling convention (matches CJ's rotations): X2/X5 LEFT side, X3/X4 RIGHT side. Corner doubles are X2+X5 (left) or X3+X4 (right). Post double is SOFT: active hands, never body.
+- 10 base frames + 10 teaching clips. Branches attached at frame idx 0, 2, 4, 6, 8.
+- Skip-pass and high-post variants deferred to a future advanced play.
+
+## Last updated
+
+2026-04-18 : 1-2-2 zone play rebuilt (basics-first, correct alignment). Deployed via Netlify commit 8a07fb5.
