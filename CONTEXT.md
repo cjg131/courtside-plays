@@ -60,29 +60,23 @@ src/
 - Video import (drop a practice clip as a layer behind the animation) : not in MVP.
 - Multi-team sharing outside CJ's own library : share URL is enough for MVP.
 
+## Location
+
+Canonical working copy: `~/cjwork/code/courtside-plays/` (NOT in Dropbox). Set up by running `bash ~/Dropbox/CJ/Claude/CoWork/About\ Me/scripts/cjwork-migrate.sh` once per Mac. See `CLAUDE.md` for the full workspace explanation.
+
+This CONTEXT.md travels with the code — after migration it lives at `~/cjwork/code/courtside-plays/CONTEXT.md`. Before migration it was at `Apps/CourtsidePlays/CONTEXT.md` in Dropbox.
+
 ## GitHub + Netlify
 
 - **Repo:** https://github.com/cjg131/courtside-plays (public, default branch `main`)
-- **Auth:** PAT in `About Me/START-HERE.md` (same one used for the other repos). Remote URL pattern: `https://<token>@github.com/cjg131/courtside-plays.git`.
-- **Netlify:** `netlify.toml` is already in the repo with SPA fallback + cache headers + Node 20. To wire deploys: https://app.netlify.com/start → "Import from Git" → pick `cjg131/courtside-plays`. Zero build config required.
+- **Auth:** PAT in `About Me/START-HERE.md`. Remote URL pattern: `https://<token>@github.com/cjg131/courtside-plays.git` for push; strip the token back out afterward.
+- **Netlify:** `netlify.toml` is already in the repo (SPA fallback + cache headers + Node 20). To wire deploys: https://app.netlify.com/start → "Import from Git" → pick `cjg131/courtside-plays`. Zero build config required.
 
-### First-time local wiring (CJ, one-time on your Mac)
+### Session rhythm
 
-The sandbox session couldn't write to `.git` through Dropbox's sync lock, so the repo was pushed from a clean copy. To hook your Dropbox folder up to the remote:
-
-```bash
-cd "/Users/cj/Dropbox/CJ/Claude/CoWork/Apps/CourtsidePlays"
-rm -rf .git
-git init -b main
-# Replace <TOKEN> with the PAT from About Me/START-HERE.md
-git remote add origin https://<TOKEN>@github.com/cjg131/courtside-plays.git
-git fetch origin
-git reset origin/main
-git branch --set-upstream-to=origin/main main
-```
-
-After that `git status` shows a clean tree and `git pull` / `git push` work normally from your Mac.
+Start: `cd ~/cjwork/code/courtside-plays && git pull`
+End: `git add -A && git commit -m "..." && git push`
 
 ## Last updated
 
-2026-04-18 : scaffold complete, editor + viewer + share URL all live, GitHub repo up, Netlify config staged.
+2026-04-18 : scaffold complete, editor + viewer + share URL all live, GitHub repo up, Netlify config staged. Canonical checkout moved to `~/cjwork/code/courtside-plays/` (out of Dropbox).
